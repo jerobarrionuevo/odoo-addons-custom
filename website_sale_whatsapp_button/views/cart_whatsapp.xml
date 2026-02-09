@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- Heredamos la vista del carrito -->
+    <template
+        id="cart_add_whatsapp_button"
+        inherit_id="website_sale.cart"
+        name="Add WhatsApp button to cart"
+    >
+
+        <!-- Insertamos el botón cerca del botón de checkout -->
+        <xpath expr="//a[contains(@class, 'btn-primary')]" position="after">
+
+            <a href="#"
+               class="btn btn-outline-success w-100 mt-2"
+               role="button">
+
+                <i class="fa fa-whatsapp me-1"/>
+                Terminar compra por WhatsApp
+
+            </a>
+
+        </xpath>
+
+    </template>
+
+</odoo>
