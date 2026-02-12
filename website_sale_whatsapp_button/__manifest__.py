@@ -7,7 +7,7 @@
         "website_sale"
     ],
     "data": [
-        "views/cart_whatsapp_button.xml"
+        "views/cart_whatsapp.xml"
     ],
     "installable": True,
     "application": False,
