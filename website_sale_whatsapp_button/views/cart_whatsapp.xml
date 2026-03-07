@@ -1,27 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
-
-    <!-- Heredamos la vista del carrito -->
     <template
         id="cart_add_whatsapp_button"
-        inherit_id="website_sale.cart"
-        name="Add WhatsApp button to cart"
-    >
+        inherit_id="website_sale.navigation_buttons"
+        name="Add WhatsApp button to cart">
 
-        <!-- Insertamos el botón cerca del botón de checkout -->
-        <xpath expr="//a[contains(@class, 'btn-primary')]" position="after">
+        <xpath expr="//a[@name='website_sale_main_button']" position="after">
 
-            <a href="#"
-               class="btn btn-outline-success w-100 mt-2"
-               role="button">
+            <t t-set="whatsapp_phone" t-value="'5493476515524'"/>
+            <t t-set="order_name" t-value="website_sale_order.name if website_sale_order else ''"/>
 
-                <i class="fa fa-whatsapp me-1"/>
-                Terminar compra por WhatsApp
-
+            <a t-att-href="'https://wa.me/' + whatsapp_phone + '?text=Hola! Realicé una reserva. Pedido: ' + order_name"
+               class="btn btn-success w-100 mt-2 d-flex align-items-center justify-content-center"
+               role="button"
+               target="_blank">
+                <i class="fa fa-whatsapp me-2" style="font-size: 1.2rem;"/>
+                <span>Finalizar por WhatsApp</span>
             </a>
 
         </xpath>
-
     </template>
-
 </odoo>

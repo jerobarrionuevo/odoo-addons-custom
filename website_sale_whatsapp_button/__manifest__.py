@@ -1,6 +1,7 @@
 {
     "name": "Website Sale WhatsApp Button",
     "version": "18.0.1.2.0",
+    'license': 'LGPL-3',
     "category": "Website",
     "summary": "Add WhatsApp button to cart",
     "depends": [
