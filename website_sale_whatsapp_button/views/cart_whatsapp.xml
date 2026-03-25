@@ -4,12 +4,9 @@
         id="cart_add_whatsapp_button"
         inherit_id="website_sale.navigation_buttons"
         name="Add WhatsApp button to cart">
-
         <xpath expr="//a[@name='website_sale_main_button']" position="after">
-
             <t t-set="whatsapp_phone" t-value="'5493476515524'"/>
             <t t-set="order_name" t-value="website_sale_order.name if website_sale_order else ''"/>
-
             <a t-att-href="'https://wa.me/' + whatsapp_phone + '?text=Hola! Realicé una reserva. Pedido: ' + order_name"
                class="btn btn-success w-100 mt-2 d-flex align-items-center justify-content-center"
                role="button"
@@ -17,7 +14,14 @@
                 <i class="fa fa-whatsapp me-2" style="font-size: 1.2rem;"/>
                 <span>Finalizar por WhatsApp</span>
             </a>
-
         </xpath>
     </template>
+   <template
+    id="hide_checkout_button"
+    inherit_id="website_sale.navigation_buttons"
+    name="Hide default checkout button">
+    <xpath expr="//a[@name='website_sale_main_button']" position="attributes">
+        <attribute name="style">display:none !important</attribute>
+    </xpath>
+</template>
 </odoo>
