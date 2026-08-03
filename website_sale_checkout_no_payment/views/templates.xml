@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="thank_you" name="Thank You">
+        <t t-call="website_sale.checkout_layout">
+            <t t-set="show_wizard_checkout" t-value="False"/>
+            <t t-set="show_navigation_button" t-value="False"/>
+            <t t-set="show_footer" t-value="True"/>
+            <t t-set="additional_title">Shop - Thank you</t>
+            <div class="text-center py-5">
+                <h3>¡Gracias por tu reserva!</h3>
+                <p class="mt-3">
+                    Tu número de reserva es
+                    <span t-field="order.name"/>.
+                    <br/>
+                    Escribinos por WhatsApp para coordinar el pago y la entrega,
+                    o esperá que te contactemos en breve.
+                </p>
+            </div>
+            <div class="oe_structure clearfix mt-3" id="oe_structure_website_sale_checkout_no_payment_thank_you"/>
+        </t>
+    </template>
+
+    <template id="address_finish_order_button" inherit_id="website_sale.address">
+        <xpath expr="//button[@id='save_address']/t[@t-if='is_anonymous_cart']" position="replace">
+            <t t-if="is_anonymous_cart">Finalizar pedido</t>
+        </xpath>
+    </template>
+
+</odoo>
