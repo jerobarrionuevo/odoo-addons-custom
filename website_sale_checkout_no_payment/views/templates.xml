@@ -23,7 +23,7 @@
 
     <template id="address_finish_order_button" inherit_id="website_sale.address">
         <xpath expr="//button[@id='save_address']/t[@t-if='is_anonymous_cart']" position="replace">
-            <t t-if="is_anonymous_cart">Finalizar pedido</t>
+            <t t-if="is_anonymous_cart">Continuar</t>
         </xpath>
     </template>
 

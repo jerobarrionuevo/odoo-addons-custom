@@ -1,53 +1,185 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <template id="address_hide_country" inherit_id="website_sale.address">
+    <!-- Formulario de /shop/contact (paso 1) y /shop/address (dirección, paso 2) para el
+         visitante sin cuenta. Es el mismo template del core:
 
-        <!-- Country stays defaulted to Argentina (controllers/main.py) but is
-             never something the customer needs to see or touch. address.js
-             never toggles this div's visibility, so a static class is safe. -->
+           - /shop/contact  (`is_contact_step`): nombre, teléfono, correo. Los campos de
+             dirección siguen en el DOM pero con d-none.
+           - /shop/address  (`is_address_step`): solo dirección. Nombre, teléfono y correo siguen
+             en el DOM (con sus valores, se postean igual) pero con d-none.
+
+         Todo depende de `is_public_checkout` / `is_contact_step` / `is_address_step` (los arma
+         el controlador). Para un cliente logueado el resultado es el mismo HTML que el estándar.
+
+         Sin position="replace": address.js busca los campos por id/parentElement y
+         necesita que sigan en el DOM.
+
+         `t-attf-class` REEMPLAZA a `class` (no se combinan, ver ir_qweb.py
+         _compile_directive_att), por eso cada atributo repite las clases base del
+         template original de website_sale. Si el core cambia esas clases, actualizarlas
+         acá. -->
+    <template id="address_public_checkout" inherit_id="website_sale.address">
+
+        <!-- País: sigue en el DOM con el valor por defecto del sistema, pero oculto. -->
         <xpath expr="//div[@id='div_country']" position="attributes">
-            <attribute name="class" add="d-none" separator=" "/>
+            <attribute name="t-attf-class">col-lg-6 mb-2 {{ 'd-none' if is_public_checkout else '' }}</attribute>
         </xpath>
 
-        <!-- Collapse the optional address fields behind a toggle, using
-             Bootstrap's native multi-collapse (shared class + data-bs-target),
-             no custom JS. Each div keeps its id and stays in the DOM, so
-             address.js's parentElement-based show/hide logic is unaffected. -->
-        <xpath expr="//div[@id='div_street']" position="before">
-            <div class="w-100"/>
-            <div class="col-lg-12 mb-2">
-                <a
-                    href="#"
-                    role="button"
-                    class="o_wsale_optional_address_toggle"
-                    data-bs-toggle="collapse"
-                    data-bs-target=".o_wsale_optional_address"
-                    aria-expanded="false"
-                >
-                    ¿Querés que te lo enviemos? Agregá tu dirección (opcional)
-                </a>
+        <!-- ¿Ya tiene cuenta? Se saca del bloque del correo (donde quedaba chico y flotando) y
+             se deja arriba de todo el formulario, más grande. Es el mismo div del core, movido:
+             conserva su condición (`account_on_checkout`) y su traducción. Solo existe con
+             carrito anónimo, o sea nunca para un cliente logueado. Es un enlace a /web/login:
+             un popup exigiría duplicar el formulario de login o JS propio. -->
+        <xpath expr="//div[@id='div_email_public']" position="before">
+            <xpath expr="//div[@id='div_email_public']/div[hasclass('float-end')]" position="move"/>
+        </xpath>
+        <xpath expr="//form/t[@t-if='is_anonymous_cart']/div[hasclass('float-end')]" position="attributes">
+            <attribute name="id">div_signin_public</attribute>
+            <attribute name="class">d-flex flex-wrap align-items-center justify-content-between gap-2 p-3 mb-4 border rounded bg-light</attribute>
+            <attribute name="style"/>
+        </xpath>
+        <xpath expr="//div[@id='div_signin_public']/span" position="attributes">
+            <attribute name="class">fs-5 fw-bold</attribute>
+        </xpath>
+        <xpath expr="//div[@id='div_signin_public']/a" position="attributes">
+            <attribute name="class">btn btn-primary btn-lg</attribute>
+        </xpath>
+
+        <!-- Título del bloque de contacto. Se oculta el "Fill in your address" del core (es_AR:
+             "Llene su dirección de correo", que viene de website_sale/i18n/es_419.po y es el
+             <h4> del carrito anónimo) y se agrega el título propio debajo. -->
+        <xpath expr="//form/t[@t-if='is_anonymous_cart']/h4" position="attributes">
+            <attribute name="t-if">not is_public_checkout</attribute>
+        </xpath>
+        <xpath expr="//div[@id='div_name']" position="before">
+            <div t-if="is_contact_step" class="col-12">
+                <h4 class="mb-1">Datos de contacto</h4>
             </div>
         </xpath>
-        <xpath expr="//div[@id='div_street']" position="attributes">
-            <attribute name="class" add="collapse o_wsale_optional_address" separator=" "/>
+
+        <!-- Orden del bloque: nombre, teléfono, correo. El teléfono pasa a ancho completo.
+             En el paso de dirección el bloque de contacto se oculta (sigue en el DOM). -->
+        <xpath expr="//div[@id='div_name']" position="attributes">
+            <attribute name="t-attf-class">col-lg-12 mb-2 {{ 'd-none' if is_address_step else '' }}</attribute>
         </xpath>
-        <xpath expr="//div[@id='div_street2']" position="attributes">
-            <attribute name="class" add="collapse o_wsale_optional_address" separator=" "/>
-        </xpath>
-        <xpath expr="(//div[@id='div_zip'])[1]" position="attributes">
-            <attribute name="class" add="collapse o_wsale_optional_address" separator=" "/>
-        </xpath>
-        <xpath expr="(//div[@id='div_zip'])[2]" position="attributes">
-            <attribute name="class" add="collapse o_wsale_optional_address" separator=" "/>
-        </xpath>
-        <xpath expr="//div[@id='div_city']" position="attributes">
-            <attribute name="class" add="collapse o_wsale_optional_address" separator=" "/>
-        </xpath>
-        <xpath expr="//div[@id='div_state']" position="attributes">
-            <attribute name="class" add="collapse o_wsale_optional_address" separator=" "/>
+        <xpath expr="//div[@id='div_phone']" position="attributes">
+            <attribute name="t-attf-class">{{ 'col-lg-12' if is_public_checkout else 'col-lg-6' }} mb-2 {{ 'd-none' if is_address_step else '' }}</attribute>
         </xpath>
 
+        <!-- Email según PUBLIC_CHECKOUT_EMAIL_MODE (controllers/main.py): 'hidden' no lo
+             renderiza; 'optional' agrega "(opcional)"; 'required' lo deja con el asterisco del core.
+             Para el visitante hay un solo campo (#o_email): el div del carrito anónimo, movido
+             debajo del teléfono. Al sacarlo del <t t-if="is_anonymous_cart"> hay que darle su
+             propia condición: sirve tanto al carrito anónimo como al visitante que vuelve a
+             editar. El div_email del core (el que usa el cliente logueado) queda para el logueado. -->
+        <xpath expr="//div[@id='div_phone']" position="after">
+            <xpath expr="//div[@id='div_email_public']" position="move"/>
+        </xpath>
+        <xpath expr="//div[@id='div_email_public']" position="attributes">
+            <attribute name="t-if">is_public_checkout and email_mode != 'hidden'</attribute>
+            <attribute name="t-attf-class">col-lg-12 mb-2 {{ 'd-none' if is_address_step else '' }}</attribute>
+        </xpath>
+        <xpath expr="//div[@id='div_email_public']/label" position="attributes">
+            <attribute name="t-attf-class">col-form-label {{ 'label-optional' if email_mode == 'optional' else '' }}</attribute>
+        </xpath>
+        <xpath expr="//div[@id='div_email_public']/label" position="inside">
+            <t t-if="email_mode == 'optional'"> <span class="text-muted fw-normal">(opcional)</span></t>
+        </xpath>
+        <xpath expr="//div[@id='div_email']" position="attributes">
+            <attribute name="t-if">not is_anonymous_cart and not is_public_checkout</attribute>
+        </xpath>
+
+        <!-- Título "Tu dirección" del core: en /shop/contact no corresponde (hay un título propio). -->
+        <xpath expr="//t[@t-if='not is_anonymous_cart'][t/h3]" position="attributes">
+            <attribute name="t-if">not is_anonymous_cart and not is_contact_step</attribute>
+        </xpath>
+
+        <!-- Campos de dirección: ocultos (d-none, siguen en el DOM para address.js) en el paso de
+             contacto; visibles en el paso de dirección. -->
+        <xpath expr="//div[@id='div_street']" position="attributes">
+            <attribute name="t-attf-class">col-lg-12 mb-2 {{ 'd-none' if is_contact_step else '' }}</attribute>
+        </xpath>
+        <xpath expr="//div[@id='div_street2']" position="attributes">
+            <attribute name="t-attf-class">col-lg-12 mb-2 {{ 'd-none' if is_contact_step else '' }}</attribute>
+        </xpath>
+        <!-- div_zip aparece dos veces (según zip_before_city); solo se renderiza una. -->
+        <xpath expr="(//div[@id='div_zip'])[1]" position="attributes">
+            <attribute name="t-attf-class">col-md-4 mb-2 {{ 'd-none' if is_contact_step else '' }}</attribute>
+        </xpath>
+        <xpath expr="(//div[@id='div_zip'])[2]" position="attributes">
+            <attribute name="t-attf-class">col-md-4 mb-2 {{ 'd-none' if is_contact_step else '' }}</attribute>
+        </xpath>
+        <xpath expr="//div[@id='div_city']" position="attributes">
+            <attribute name="t-attf-class">col-md-8 mb-2 {{ 'd-none' if is_contact_step else '' }}</attribute>
+        </xpath>
+        <xpath expr="//div[@id='div_state']" position="attributes">
+            <attribute name="t-attf-class">col-lg-6 mb-2 {{ 'd-none' if is_contact_step else '' }}</attribute>
+        </xpath>
+
+        <!-- Botón del paso de contacto: "Continuar" (lleva al checkout, no finaliza nada).
+             El texto del visitante con carrito anónimo lo pone website_sale_checkout_no_payment
+             (nodo t-if="is_anonymous_cart", que acá no se toca); acá se cubre el visitante que
+             vuelve a editar su contacto: el t-else del core pasa a t-elif y se agrega el texto. -->
+        <xpath expr="//button[@id='save_address']/t[@t-else]" position="attributes">
+            <attribute name="t-else"/>
+            <attribute name="t-elif">not is_contact_step</attribute>
+        </xpath>
+        <xpath expr="//button[@id='save_address']/t[last()]" position="after">
+            <t t-if="is_contact_step and not is_anonymous_cart">Continuar</t>
+        </xpath>
+
+    </template>
+
+    <!-- Checkout del visitante: "Elija un método de entrega" ARRIBA de "Dirección de entrega".
+         No se usa position="move" porque movería también el orden del cliente logueado: se
+         apagan los dos nodos originales para el visitante y se agregan, antes de la
+         facturación, copias de los t-call en el orden nuevo (solo visitante). -->
+    <template id="checkout_public_order" inherit_id="website_sale.checkout">
+        <xpath expr="//div[@id='shop_checkout']/t[@groups='account.group_delivery_invoice_address']" position="attributes">
+            <attribute name="t-if">order._has_deliverable_products() and not website.is_public_user()</attribute>
+        </xpath>
+        <xpath expr="//div[@id='shop_checkout']/t[@t-call='website_sale.delivery_form']" position="attributes">
+            <attribute name="t-if">not website.is_public_user()</attribute>
+        </xpath>
+        <xpath expr="//div[@id='shop_checkout']/t[@t-call='website_sale.billing_address_row']" position="before">
+            <!-- Con "dirección de entrega" habilitada: métodos de entrega y luego dirección. -->
+            <t
+                t-if="website.is_public_user() and order._has_deliverable_products()"
+                groups="account.group_delivery_invoice_address"
+            >
+                <t t-call="website_sale.delivery_form">
+                    <t t-set="selected_dm_id" t-value="order.carrier_id.id"/>
+                </t>
+                <t t-call="website_sale.delivery_address_row">
+                    <t t-set="addresses" t-value="delivery_addresses"/>
+                </t>
+            </t>
+            <!-- Sin esa opción: solo métodos de entrega, antes de la facturación. -->
+            <t
+                t-if="website.is_public_user()"
+                groups="!account.group_delivery_invoice_address"
+                t-call="website_sale.delivery_form"
+            >
+                <t t-set="selected_dm_id" t-value="order.carrier_id.id"/>
+            </t>
+        </xpath>
+    </template>
+
+    <!-- El contacto del visitante se edita en /shop/contact (la dirección de entrega sigue yendo
+         a /shop/address). Para el cliente logueado la expresión da el mismo href de siempre. -->
+    <template id="address_kanban_public_contact" inherit_id="website_sale.address_kanban">
+        <xpath expr="//a[hasclass('js_edit_address')]" position="attributes">
+            <attribute name="t-att-href">'/shop/contact' if (address_type == 'billing' and website.is_public_user()) else (new_address_href + '&amp;partner_id=' + str(contact.id))</attribute>
+        </xpath>
+    </template>
+
+    <!-- El visitante tiene un único contacto: sin botón "Agregar dirección" (ni facturación ni
+         entrega). Un segundo partner de facturación no tendría nombre en el form de dirección. -->
+    <template id="address_row_public_no_add" inherit_id="website_sale.address_row">
+        <xpath expr="//div[@t-if='is_invoice or not order.website_id.is_public_user()']" position="attributes">
+            <attribute name="t-if">not order.website_id.is_public_user()</attribute>
+        </xpath>
     </template>
 
 </odoo>
