@@ -11,8 +11,8 @@ entrega de una reserva que quedó como cotización.
 - El mensaje incluye el nombre del cliente, el número de pedido, la lista de productos
   (sin las líneas de entrega) y el total.
 - **No confirma ni modifica el pedido:** solo arma el enlace `https://wa.me/<número>?text=…`.
-- Versiones 1.x (la que hoy está instalada en producción) reemplazaban el botón "Finalizar
-  compra" del carrito; esta versión cambió de rol y vive en la pantalla de gracias.
+- Las versiones 1.x reemplazaban el botón "Finalizar compra" del carrito; esta versión cambió
+  de rol y vive en la pantalla de gracias.
 
 ## Dependencias
 
